@@ -1,0 +1,72 @@
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+  <title>Document</title>
+<style media="screen">
+  div {
+    background-color: #ccc;
+    width: 100px;
+  }
+  p {
+    display: block;
+    background-color: red;
+  }
+  #test-1 {
+    white-space: normal;
+    vertical-align: 
+  }
+  #test-2 {
+    white-space: nowrap;
+  }
+  #test-3 {
+    white-space: pre;
+  }
+  #test-4 {
+    white-space: pre-wrap;
+  }
+  #test-5 {
+    white-space: pre-line;
+  }
+</style></head>
+
+<body>
+  <textarea name="name" rows="8" cols="80"></textarea>
+  <button type="button" name="button" id="edit-btn">替换</button>
+  <br>
+  <button type="button" name="button" id="block-btn">block</button>
+  <button type="button" name="button" id="inline-btn">inline</button>
+  <button type="button" name="button" id="inline-block-btn">inline-block</button>
+  <div>
+    <p id="test-1">12312541251512412人 515125111
+5151251</p>
+    <p id="test-2">12312541251512412人 515125111
+5151251</p>
+    <p id="test-3">12312541251512412人 515125111
+5151251</p>
+    <p id="test-4">12312541251512412人 515125111
+5151251</p>
+    <p id="test-5">12312541251512412人 515125111
+5151251</p>
+  <p>1412451t112fa4125125215211312ddddddddddfo要的话会换行, 指的是按照word-break规
+    则来判断，所以要很好实现文字的换行，单独的white-space是不
+    够的，还需要word-break。可以看做white-space处理了换行符，空格，在文字中的问题，和文字</p>
+  </div>
+
+<script type="text/javascript">
+$().ready(function() {
+  $('#edit-btn').click(function () {
+    var txt = $('textarea').val();
+    console.log(txt);
+    $('div p').html(txt);
+  });
+  $('#block-btn,#inline-btn,#inline-block-btn').click(function () {
+    var id = $(this).attr('id');
+    var display = id.replace('-btn', '');
+    $('div p').css('display', display);
+  })
+});
+</script>
+
+</body></html>
