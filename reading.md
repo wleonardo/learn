@@ -102,3 +102,168 @@ document.compatMode // BackCompat：怪异模式；CSS1Compat：标准模式
 
 > 对于GET方式的请求，浏览器会把http header和data一并发送出去，服务器响应200（返回数据）；
 > 而对于POST，浏览器先发送header，服务器响应100 continue，浏览器再发送data，服务器响应200 ok（返回数据）。
+
+#### React的事件系统
+[React源码分析6 — React合成事件系统](https://zhuanlan.zhihu.com/p/25883536)
+> 文章中关于阻止时间冒泡的说法是有问题的，`e.stopPropagation`还是会阻止事件继续冒泡，只是这个`e`已经是Reacrt合成后的事件，`e.stopPropagation`也是封装过后的新的函数，处理了兼容性
+
+流程大概是，在`Component`的创建（`mountComponent`）和更新（`updateComponent`）的时候，代码会遍历`jsx`，更新`dom`的`props`，其中就会获取到所有需要绑定的新事件。
+
+然后一边将事件绑定到`document`上，同时将所有的事件存储在`listenerBank`对象中，结构类似为`listenerBank.onclick[nodeId] = callback`。
+
+例如，触发点击事件的时候，通过原生的`event.target`，来获取到当前被触发的`dom`,然后遍历`dom`的父节点（这里所有的`dom`和结构，都是指`jsx`定义的`dom`结构，并不是真实的`dom`结构, 因为会出现`Portals`的情况），获取到所有的事件回调。
+
+> 关于这里的解释是事件回调中可能会改变Virtual DOM结构,所以要先遍历好组件层级。
+
+然后遍历获取到的所有事件回调。
+
+#### z-index
+[深入理解CSS中的层叠上下文和层叠顺序](http://www.zhangxinxu.com/wordpress/2016/01/understand-css-stacking-context-order-z-index/)
+
+#### 关于一些css的小问题
+[CSS十问——好奇心+刨根问底=CSSer](http://www.cnblogs.com/dongtianee/p/4563084.html)
+
+#### curry and thunk
+curry是将多参数函数改为高阶单参数函数
+thunk是将多参数函数改为只有一个callback的函数
+是完全不一样的
+```
+var sum = function(a, b, c) {
+	...
+}
+
+// curry
+var sumCurry = curry(sum);
+
+sumCurry(a)(b)(c);
+
+
+var readFileThunk = Thunk(fileName);
+readFileThunk(callback);
+
+// thunk
+var Thunk = function (fileName){
+  return function (callback){
+    return fs.readFile(fileName, callback);
+  };
+};
+```
+
+#### react life cycle
+
+![](./images/react-life-cycle.png)
+![](./images/react-life-cycle-detail.png)
+
+
+#### react forceUpdate
+
+流程和setState完全一致，只是在最后的`updateComponent`函数中，直接获取了当前`state`，作为需要更新的`state`，并且跳过了`shouldComponentUpdate`的判断，代码如下
+```
+updateComponent: function (transaction, prevParentElement, nextParentElement, prevUnmaskedContext, nextUnmaskedContext) {
+    console.log('updateComponent');
+    var inst = this._instance;
+    !(inst != null) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Attempted to update component `%s` that has already been unmounted (or failed to mount).', this.getName() || 'ReactCompositeComponent') : _prodInvariant('136', this.getName() || 'ReactCompositeComponent') : void 0;
+
+    var willReceive = false;
+    var nextContext;
+
+    // Determine if the context has changed or not
+    if (this._context === nextUnmaskedContext) {
+      nextContext = inst.context;
+    } else {
+      nextContext = this._processContext(nextUnmaskedContext);
+      willReceive = true;
+    }
+
+    var prevProps = prevParentElement.props;
+    var nextProps = nextParentElement.props;
+
+    // Not a simple state update but a props update
+    if (prevParentElement !== nextParentElement) {
+      willReceive = true;
+    }
+
+    // An update here will schedule an update but immediately set
+    // _pendingStateQueue which will ensure that any state updates gets
+    // immediately reconciled instead of waiting for the next batch.
+    if (willReceive && inst.componentWillReceiveProps) {
+      if (process.env.NODE_ENV !== 'production') {
+        measureLifeCyclePerf(function () {
+          return inst.componentWillReceiveProps(nextProps, nextContext);
+        }, this._debugID, 'componentWillReceiveProps');
+      } else {
+        inst.componentWillReceiveProps(nextProps, nextContext);
+      }
+    }
+
+		// 在这里直接获取最终需要更新的state的时候，直接获取了当前的state
+		// 如果是普通的setState则会获取到合并后需要更新的state
+		// _processPendingState的代码在下面
+    var nextState = this._processPendingState(nextProps, nextContext);
+    console.log("nextState: ");
+    console.log(nextState);
+    var shouldUpdate = true;
+    console.log("inst.shouldComponentUpdate: " + inst.shouldComponentUpdate);
+    if (!this._pendingForceUpdate) {
+      if (inst.shouldComponentUpdate) {
+        if (process.env.NODE_ENV !== 'production') {
+          shouldUpdate = measureLifeCyclePerf(function () {
+            return inst.shouldComponentUpdate(nextProps, nextState, nextContext);
+          }, this._debugID, 'shouldComponentUpdate');
+        } else {
+          shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
+        }
+      } else {
+        if (this._compositeType === CompositeTypes.PureClass) {
+          shouldUpdate = !shallowEqual(prevProps, nextProps) || !shallowEqual(inst.state, nextState);
+        }
+      }
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      process.env.NODE_ENV !== 'production' ? warning(shouldUpdate !== undefined, '%s.shouldComponentUpdate(): Returned undefined instead of a ' + 'boolean value. Make sure to return true or false.', this.getName() || 'ReactCompositeComponent') : void 0;
+    }
+
+    this._updateBatchNumber = null;
+    if (shouldUpdate) {
+      this._pendingForceUpdate = false;
+      // Will set `this.props`, `this.state` and `this.context`.
+      this._performComponentUpdate(nextParentElement, nextProps, nextState, nextContext, transaction, nextUnmaskedContext);
+    } else {
+      // If it's determined that a component should not update, we still want
+      // to set props and state but we shortcut the rest of the update.
+      this._currentElement = nextParentElement;
+      this._context = nextUnmaskedContext;
+      inst.props = nextProps;
+      inst.state = nextState;
+      inst.context = nextContext;
+    }
+    console.log('完成update');
+  }
+
+
+
+	_processPendingState: function (props, context) {
+    var inst = this._instance;
+    var queue = this._pendingStateQueue;
+    var replace = this._pendingReplaceState;
+    this._pendingReplaceState = false;
+    this._pendingStateQueue = null;
+		// 如果需要更新的state的队列是空的，则直接返回当前组件实例的state
+    if (!queue) {
+      return inst.state;
+    }
+
+    if (replace && queue.length === 1) {
+      return queue[0];
+    }
+
+    var nextState = _assign({}, replace ? queue[0] : inst.state);
+    for (var i = replace ? 1 : 0; i < queue.length; i++) {
+      var partial = queue[i];
+      _assign(nextState, typeof partial === 'function' ? partial.call(inst, nextState, props, context) : partial);
+    }
+
+    return nextState;
+  }
+```
