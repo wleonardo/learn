@@ -60,3 +60,19 @@ o### 浏览器中
 
 > [详解JavaScript中的Event Loop（事件循环）机制](https://zhuanlan.zhihu.com/p/33058983)
 > [The Node.js Event Loop, Timers, and process.nextTick()](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
+
+
+#### UI update
+
+[event-loop-processing-model](https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model)
+[Vue源码详解之nextTick](https://chuckliu.me/#!/posts/58bd08a2b5187d2fb51c04f9)
+
+第一步，从多个task queue中的一个queue里，挑出一个最老的task。（因为有多个task queue的存在，使得浏览器可以完成我们前面说的，优先、高频率的执行某些task queue中的任务，比如UI的task queue）。
+然后2到5步，执行这个task。
+第六步， Perform a microtask checkpoint. ，这里会执行完microtask queue中的所有的microtask，如果microtask执行过程中又添加了microtask，那么仍然会执行新添加的microtask，当然，这个机制好像有限制，一轮microtask的执行总量似乎有限制(1000?)，数量太多就执行一部分留下的以后再执行？这里我不太确定。
+
+第七步，Update the rendering：
+7.2到7.4，当前轮次的event loop中关联到的document对象会保持某些特定顺序，这些document对象都会执行需要执行UI render的，但是并不是所有关联到的document都需要更新UI，浏览器会判断这个document是否会从UI Render中获益，因为浏览器只需要保持60Hz的刷新率即可，而每轮event loop都是非常快的，所以没必要每个document都Render UI。
+7.5和7.6 run the resize steps/run the scroll steps不是说去执行resize和scroll。每次我们scoll的时候视口或者dom就已经立即scroll了，并把document或者dom加入到 pending scroll event targets中，而run the scroll steps具体做的则是遍历这些target，在target上触发scroll事件。run the resize steps也是相似的，这个步骤是触发resize事件。
+7.8和7.9 后续的media query, run CSS animations and send events等等也是相似的，都是触发事件，第10步和第11步则是执行我们熟悉的requestAnimationFrame回调和IntersectionObserver回调（第十步还是挺关键的,raf就是在这执行的！）。
+7.12 渲染UI，关键就在这了。
