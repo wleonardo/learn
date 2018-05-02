@@ -63,23 +63,22 @@ function( options ) {
   * 我需要声明式地来表述复杂异步数据流（如长流程表单，请求失败后重试等），命令式的 thunk 对于复杂异步数据流的表现力有限
 
 #### React的事件系统
-	[React源码分析6 — React合成事件系统](https://zhuanlan.zhihu.com/p/25883536)
-	> 文章中关于阻止时间冒泡的说法是有问题的，`e.stopPropagation`还是会阻止事件继续冒泡，只是这个`e`已经是Reacrt合成后的事件，`e.stopPropagation`也是封装过后的新的函数，处理了兼容性
 
-	流程大概是，在`Component`的创建（`mountComponent`）和更新（`updateComponent`）的时候，代码会遍历`jsx`，更新`dom`的`props`，其中就会获取到所有需要绑定的新事件。
+[React源码分析6 — React合成事件系统](https://zhuanlan.zhihu.com/p/25883536)
 
-	然后一边将事件绑定到`document`上，同时将所有的事件存储在`listenerBank`对象中，结构类似为`listenerBank.onclick[nodeId] = callback`。
+> 文章中关于阻止时间冒泡的说法是有问题的，`e.stopPropagation`还是会阻止事件继续冒泡，只是这个`e`已经是Reacrt合成后的事件，`e.stopPropagation`也是封装过后的新的函数，处理了兼容性
 
-	例如，触发点击事件的时候，通过原生的`event.target`，来获取到当前被触发的`dom`,然后遍历`dom`的父节点（这里所有的`dom`和结构，都是指`jsx`定义的`dom`结构，并不是真实的`dom`结构, 因为会出现`Portals`的情况），获取到所有的事件回调。
+流程大概是，在`Component`的创建（`mountComponent`）和更新（`updateComponent`）的时候，代码会遍历`jsx`，更新`dom`的`props`，其中就会获取到所有需要绑定的新事件。
 
-	> 关于这里的解释是事件回调中可能会改变Virtual DOM结构,所以要先遍历好组件层级。
+然后一边将事件绑定到`document`上，同时将所有的事件存储在`listenerBank`对象中，结构类似为`listenerBank.onclick[nodeId] = callback`。
 
-	然后遍历获取到的所有事件回调。
+例如，触发点击事件的时候，通过原生的`event.target`，来获取到当前被触发的`dom`,然后遍历`dom`的父节点（这里所有的`dom`和结构，都是指`jsx`定义的`dom`结构，并不是真实的`dom`结构, 因为会出现`Portals`的情况），在获取到事件回调的时候不会立刻执行回调，直到获取到了所有的回调函数，然后遍历执行获取到的所有回调函数。
+> 关于这里的解释是事件回调中可能会改变Virtual DOM结构,所以要先遍历好组件层级。
 
-	#### react life cycle
+#### react life cycle
 
-	![](./images/react-life-cycle.png)
-	![](./images/react-life-cycle-detail.png)
+![](./images/react-life-cycle.png)
+![](./images/react-life-cycle-detail.png)
 
 
 #### react forceUpdate
@@ -234,6 +233,31 @@ function( options ) {
 #### 关于一些css的小问题
 [CSS十问——好奇心+刨根问底=CSSer](http://www.cnblogs.com/dongtianee/p/4563084.html)
 
+#### line-height 150% 与 1.5 的区别
+当父元素的`line-height`为百分比时, 通过百分比计算出父元素本身的行高（使用px来表示），子元素默认继承父元素的行高
+
+```
+<div style="font-size: 16px; line-height: 150%;">
+  父元素会行高为 16px * 150% = 24px
+	<p style="font-size: 30px;">
+	 子元素直接继承父元素的最终的行高 24px
+	</p>
+</div>
+```
+
+当父元素的`line-height`为数字时, 通过数字计算出父元素本身的行高（使用px来表示），子元素默认继承父元素的行高的计算方式
+
+```
+<div style="font-size: 16px; line-height: 1.5">
+  父元素会行高为 16px * 1.5 = 24px
+	<p style="font-size: 30px;">
+	 子元素直接继承父元素行高的计算 30px * 1.5 = 45px
+	</p>
+</div>
+```
+
+相当于百分比时，子元素直接继承父元素的最终计算出来的行高，而为数字时，子元素继承的是父元素计算行高的方式（`line-height` * `font-size`）, 所以两种方式不影响自身，而是影响了子元素的行高的继承方式。
+
 ### 其他
 #### https的握手过程
 [SSL/TLS协议运行机制的概述](http://www.ruanyifeng.com/blog/2014/02/ssl_tls.html)
@@ -260,6 +284,19 @@ document.compatMode // BackCompat：怪异模式；CSS1Compat：标准模式
 
 #### 缓存
 ![](https://segmentfault.com/img/remote/1460000013662137?w=886&h=539)
+
+#### no-cache 和 no-store的区别
+基于《HTTP权威指南(中文版)》 191页的描述
+
+首先`no-cache`在`Pragma`和`Cache-Control`都有，`no-store`则是`Cache-Control`的属性。
+```
+Pragma: no-cache
+Cache-Control: no-store
+Cache-Control: no-cache
+```
+
+`Cache-Control: no-store`是不会存储在本地的缓存区中。每次都是请求获取最新的数据。
+`Cache-Control: no-cache`是可以存储在本地缓存区中。只是在与原始服务器进行比较以后，才可以提供给客户端使用。准确的来说`no-cache`表示为`do-not-serve-from-cache-without-revalidation`;
 
 #### GET与POST的区别
 [99%的人都理解错了HTTP中GET与POST的区别](https://zhuanlan.zhihu.com/p/22536382)
@@ -289,3 +326,22 @@ document.compatMode // BackCompat：怪异模式；CSS1Compat：标准模式
 
 #### event-loop
 ![](./images/event-loop.png)
+
+#### 跨域的几种解决 式
+* src
+	* JSONP
+	* iframe (需要处理iframe之间或者父子页之间的通信)
+		* window.name
+		* document.domain
+		* location.hash
+		* postMessage
+* server
+	 * CORS
+	 * server proxy
+	 	* node
+		* nginx
+* other
+	* websokcet(本身支持跨域)
+	* SSE(基于CORS)
+
+[那些年前端跨过的域](https://juejin.im/post/5ae16f26f265da0ba60f7f9a#heading-16)
