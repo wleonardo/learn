@@ -83,147 +83,176 @@ function( options ) {
 
 #### react forceUpdate
 
-	流程和setState完全一致，只是在最后的`updateComponent`函数中，直接获取了当前`state`，作为需要更新的`state`，并且跳过了`shouldComponentUpdate`的判断，代码如下
-	```
-	updateComponent: function (transaction, prevParentElement, nextParentElement, prevUnmaskedContext, nextUnmaskedContext) {
-	    console.log('updateComponent');
-	    var inst = this._instance;
-	    !(inst != null) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Attempted to update component `%s` that has already been unmounted (or failed to mount).', this.getName() || 'ReactCompositeComponent') : _prodInvariant('136', this.getName() || 'ReactCompositeComponent') : void 0;
+流程和setState完全一致，只是在最后的`updateComponent`函数中，直接获取了当前`state`，作为需要更新的`state`，并且跳过了`shouldComponentUpdate`的判断，代码如下
+```
+updateComponent: function (transaction, prevParentElement, nextParentElement, prevUnmaskedContext, nextUnmaskedContext) {
+    console.log('updateComponent');
+    var inst = this._instance;
+    !(inst != null) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Attempted to update component `%s` that has already been unmounted (or failed to mount).', this.getName() || 'ReactCompositeComponent') : _prodInvariant('136', this.getName() || 'ReactCompositeComponent') : void 0;
 
-	    var willReceive = false;
-	    var nextContext;
+    var willReceive = false;
+    var nextContext;
 
-	    // Determine if the context has changed or not
-	    if (this._context === nextUnmaskedContext) {
-	      nextContext = inst.context;
-	    } else {
-	      nextContext = this._processContext(nextUnmaskedContext);
-	      willReceive = true;
-	    }
+    // Determine if the context has changed or not
+    if (this._context === nextUnmaskedContext) {
+      nextContext = inst.context;
+    } else {
+      nextContext = this._processContext(nextUnmaskedContext);
+      willReceive = true;
+    }
 
-	    var prevProps = prevParentElement.props;
-	    var nextProps = nextParentElement.props;
+    var prevProps = prevParentElement.props;
+    var nextProps = nextParentElement.props;
 
-	    // Not a simple state update but a props update
-	    if (prevParentElement !== nextParentElement) {
-	      willReceive = true;
-	    }
+    // Not a simple state update but a props update
+    if (prevParentElement !== nextParentElement) {
+      willReceive = true;
+    }
 
-	    // An update here will schedule an update but immediately set
-	    // _pendingStateQueue which will ensure that any state updates gets
-	    // immediately reconciled instead of waiting for the next batch.
-	    if (willReceive && inst.componentWillReceiveProps) {
-	      if (process.env.NODE_ENV !== 'production') {
-	        measureLifeCyclePerf(function () {
-	          return inst.componentWillReceiveProps(nextProps, nextContext);
-	        }, this._debugID, 'componentWillReceiveProps');
-	      } else {
-	        inst.componentWillReceiveProps(nextProps, nextContext);
-	      }
-	    }
+    // An update here will schedule an update but immediately set
+    // _pendingStateQueue which will ensure that any state updates gets
+    // immediately reconciled instead of waiting for the next batch.
+    if (willReceive && inst.componentWillReceiveProps) {
+      if (process.env.NODE_ENV !== 'production') {
+        measureLifeCyclePerf(function () {
+          return inst.componentWillReceiveProps(nextProps, nextContext);
+        }, this._debugID, 'componentWillReceiveProps');
+      } else {
+        inst.componentWillReceiveProps(nextProps, nextContext);
+      }
+    }
 
-			// 在这里直接获取最终需要更新的state的时候，直接获取了当前的state
-			// 如果是普通的setState则会获取到合并后需要更新的state
-			// _processPendingState的代码在下面
-	    var nextState = this._processPendingState(nextProps, nextContext);
-	    console.log("nextState: ");
-	    console.log(nextState);
-	    var shouldUpdate = true;
-	    console.log("inst.shouldComponentUpdate: " + inst.shouldComponentUpdate);
-	    if (!this._pendingForceUpdate) {
-	      if (inst.shouldComponentUpdate) {
-	        if (process.env.NODE_ENV !== 'production') {
-	          shouldUpdate = measureLifeCyclePerf(function () {
-	            return inst.shouldComponentUpdate(nextProps, nextState, nextContext);
-	          }, this._debugID, 'shouldComponentUpdate');
-	        } else {
-	          shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
-	        }
-	      } else {
-	        if (this._compositeType === CompositeTypes.PureClass) {
-	          shouldUpdate = !shallowEqual(prevProps, nextProps) || !shallowEqual(inst.state, nextState);
-	        }
-	      }
-	    }
+		// 在这里直接获取最终需要更新的state的时候，直接获取了当前的state
+		// 如果是普通的setState则会获取到合并后需要更新的state
+		// _processPendingState的代码在下面
+    var nextState = this._processPendingState(nextProps, nextContext);
+    console.log("nextState: ");
+    console.log(nextState);
+    var shouldUpdate = true;
+    console.log("inst.shouldComponentUpdate: " + inst.shouldComponentUpdate);
+    if (!this._pendingForceUpdate) {
+      if (inst.shouldComponentUpdate) {
+        if (process.env.NODE_ENV !== 'production') {
+          shouldUpdate = measureLifeCyclePerf(function () {
+            return inst.shouldComponentUpdate(nextProps, nextState, nextContext);
+          }, this._debugID, 'shouldComponentUpdate');
+        } else {
+          shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
+        }
+      } else {
+        if (this._compositeType === CompositeTypes.PureClass) {
+          shouldUpdate = !shallowEqual(prevProps, nextProps) || !shallowEqual(inst.state, nextState);
+        }
+      }
+    }
 
-	    if (process.env.NODE_ENV !== 'production') {
-	      process.env.NODE_ENV !== 'production' ? warning(shouldUpdate !== undefined, '%s.shouldComponentUpdate(): Returned undefined instead of a ' + 'boolean value. Make sure to return true or false.', this.getName() || 'ReactCompositeComponent') : void 0;
-	    }
+    if (process.env.NODE_ENV !== 'production') {
+      process.env.NODE_ENV !== 'production' ? warning(shouldUpdate !== undefined, '%s.shouldComponentUpdate(): Returned undefined instead of a ' + 'boolean value. Make sure to return true or false.', this.getName() || 'ReactCompositeComponent') : void 0;
+    }
 
-	    this._updateBatchNumber = null;
-	    if (shouldUpdate) {
-	      this._pendingForceUpdate = false;
-	      // Will set `this.props`, `this.state` and `this.context`.
-	      this._performComponentUpdate(nextParentElement, nextProps, nextState, nextContext, transaction, nextUnmaskedContext);
-	    } else {
-	      // If it's determined that a component should not update, we still want
-	      // to set props and state but we shortcut the rest of the update.
-	      this._currentElement = nextParentElement;
-	      this._context = nextUnmaskedContext;
-	      inst.props = nextProps;
-	      inst.state = nextState;
-	      inst.context = nextContext;
-	    }
-	    console.log('完成update');
-	  }
+    this._updateBatchNumber = null;
+    if (shouldUpdate) {
+      this._pendingForceUpdate = false;
+      // Will set `this.props`, `this.state` and `this.context`.
+      this._performComponentUpdate(nextParentElement, nextProps, nextState, nextContext, transaction, nextUnmaskedContext);
+    } else {
+      // If it's determined that a component should not update, we still want
+      // to set props and state but we shortcut the rest of the update.
+      this._currentElement = nextParentElement;
+      this._context = nextUnmaskedContext;
+      inst.props = nextProps;
+      inst.state = nextState;
+      inst.context = nextContext;
+    }
+    console.log('完成update');
+  }
 
 
 
-		_processPendingState: function (props, context) {
-	    var inst = this._instance;
-	    var queue = this._pendingStateQueue;
-	    var replace = this._pendingReplaceState;
-	    this._pendingReplaceState = false;
-	    this._pendingStateQueue = null;
-			// 如果需要更新的state的队列是空的，则直接返回当前组件实例的state
-	    if (!queue) {
-	      return inst.state;
-	    }
+	_processPendingState: function (props, context) {
+    var inst = this._instance;
+    var queue = this._pendingStateQueue;
+    var replace = this._pendingReplaceState;
+    this._pendingReplaceState = false;
+    this._pendingStateQueue = null;
+		// 如果需要更新的state的队列是空的，则直接返回当前组件实例的state
+    if (!queue) {
+      return inst.state;
+    }
 
-	    if (replace && queue.length === 1) {
-	      return queue[0];
-	    }
+    if (replace && queue.length === 1) {
+      return queue[0];
+    }
 
-	    var nextState = _assign({}, replace ? queue[0] : inst.state);
-	    for (var i = replace ? 1 : 0; i < queue.length; i++) {
-	      var partial = queue[i];
-	      _assign(nextState, typeof partial === 'function' ? partial.call(inst, nextState, props, context) : partial);
-	    }
+    var nextState = _assign({}, replace ? queue[0] : inst.state);
+    for (var i = replace ? 1 : 0; i < queue.length; i++) {
+      var partial = queue[i];
+      _assign(nextState, typeof partial === 'function' ? partial.call(inst, nextState, props, context) : partial);
+    }
 
-	    return nextState;
-	  }
-	```
+    return nextState;
+  }
+```
 #### curry and thunk
-	curry是将多参数函数改为高阶单参数函数
-	thunk是将多参数函数改为只有一个callback的函数
-	是完全不一样的
-	```
-	var sum = function(a, b, c) {
-		...
-	}
+curry是将多参数函数改为高阶单参数函数
+thunk是将多参数函数改为只有一个callback的函数
+是完全不一样的
 
-	// curry
-	var sumCurry = curry(sum);
+```
+var sum = function(a, b, c) {
+	...
+}
 
-	sumCurry(a)(b)(c);
+// curry
+var sumCurry = curry(sum);
+
+sumCurry(a)(b)(c);
 
 
-	var readFileThunk = Thunk(fileName);
-	readFileThunk(callback);
+var readFileThunk = Thunk(fileName);
+readFileThunk(callback);
 
-	// thunk
-	var Thunk = function (fileName){
-	  return function (callback){
-	    return fs.readFile(fileName, callback);
-	  };
-	};
-	```
+// thunk
+var Thunk = function (fileName){
+  return function (callback){
+    return fs.readFile(fileName, callback);
+  };
+};
+```
 #### 数组的几个重要方法
 
 * `Array.prototype.slice`
 * `Array.prototype.splice`
 * `Array.prototype.reduce`
 * `Array.prototype.sort`
+
+### Node
+
+#### module.export 和 exports
+
+[exports shortcut](https://nodejs.org/dist/latest-v8.x/docs/api/modules.html#modules_exports_shortcut)
+
+官方已经说得很好了，`exports`就是`module.export`的一个`shortcut`，其实就相当于我们在写`JS`的`prototype`的时候一样，直接写`class.prototype.fnName = fn`太长了，我们一般会这么写：
+```
+var proto = class.prototype;
+
+proto.fnName = fn;
+```
+
+那么关于`exports`和`module.export`的关系和使用方式就很清楚了。**`exports`只是`module.export`的引用。**
+
+我们可以这么用`exports`
+
+```
+// 方法一
+
+exports.a = fn;
+
+//方法二
+exports = {a:fn};
+// 重新引用关联一下
+module.export = exports;
+```
 
 ### css
 
