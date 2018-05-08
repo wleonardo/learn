@@ -278,7 +278,7 @@ module.export = exports;
 
 ```
 <div style="font-size: 16px; line-height: 1.5">
-  父元素会行高为 16px * 1.5 = 24px
+  父元素会行高为 16px * 1.5 = 24px
 	<p style="font-size: 30px;">
 	 子元素直接继承父元素行高的计算 30px * 1.5 = 45px
 	</p>
@@ -317,7 +317,7 @@ document.compatMode // BackCompat：怪异模式；CSS1Compat：标准模式
 #### no-cache 和 no-store的区别
 基于《HTTP权威指南(中文版)》 191页的描述
 
-首先`no-cache`在`Pragma`和`Cache-Control`都有，`no-store`则是`Cache-Control`的属性。
+首先`no-cache`在`Pragma`和`Cache-Control`都有，`no-store`则是`Cache-Control`的属性。
 ```
 Pragma: no-cache
 Cache-Control: no-store
