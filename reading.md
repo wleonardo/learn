@@ -239,7 +239,7 @@ var proto = class.prototype;
 proto.fnName = fn;
 ```
 
-那么关于`exports`和`module.export`的关系和使用方式就很清楚了。**`exports`只是`module.export`的引用。**
+那么关于`exports`和`module.export`的关系和使用方式就很清楚了。**`exports`只是`module.export`的引用。**
 
 我们可以这么用`exports`
 
@@ -263,18 +263,18 @@ module.export = exports;
 [CSS十问——好奇心+刨根问底=CSSer](http://www.cnblogs.com/dongtianee/p/4563084.html)
 
 #### line-height 150% 与 1.5 的区别
-当父元素的`line-height`为百分比时, 通过百分比计算出父元素本身的行高（使用px来表示），子元素默认继承父元素的行高
+当父元素的`line-height`为百分比时, 通过百分比计算出父元素本身的行高（使用px来表示），子元素默认继承父元素的行高
 
 ```
 <div style="font-size: 16px; line-height: 150%;">
-  父元素会行高为 16px * 150% = 24px
+  父元素会行高为 16px * 150% = 24px
 	<p style="font-size: 30px;">
 	 子元素直接继承父元素的最终的行高 24px
 	</p>
 </div>
 ```
 
-当父元素的`line-height`为数字时, 通过数字计算出父元素本身的行高（使用px来表示），子元素默认继承父元素的行高的计算方式
+当父元素的`line-height`为数字时, 通过数字计算出父元素本身的行高（使用px来表示），子元素默认继承父元素的行高的计算方式
 
 ```
 <div style="font-size: 16px; line-height: 1.5">
@@ -324,7 +324,7 @@ Cache-Control: no-store
 Cache-Control: no-cache
 ```
 
-`Cache-Control: no-store`是不会存储在本地的缓存区中。每次都是请求获取最新的数据。
+`Cache-Control: no-store`是不会存储在本地的缓存区中。每次都是请求获取最新的数据。
 `Cache-Control: no-cache`是可以存储在本地缓存区中。只是在与原始服务器进行比较以后，才可以提供给客户端使用。准确的来说`no-cache`表示为`do-not-serve-from-cache-without-revalidation`;
 
 #### GET与POST的区别
